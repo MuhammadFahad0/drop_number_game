@@ -1,7 +1,7 @@
-class TileModel {
-  TileModel({
-    required this.name,
-  });
-
-  int name;
-}
+// class TileModel {
+//   TileModel({
+//     required this.name,
+//   });
+//
+//   int name;
+// }

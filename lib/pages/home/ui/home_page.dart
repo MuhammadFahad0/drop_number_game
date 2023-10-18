@@ -1,5 +1,3 @@
-
-import 'package:drop_number_game/models/tile_model.dart';
 import 'package:drop_number_game/pages/home/controller/home_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -13,9 +11,8 @@ class HomePage extends GetView<HomeController> {
       body: Center(
         child: controller.obx(
           (s) => GestureDetector(
-
             onHorizontalDragStart: (details) {
-           controller.newValue = controller.generateValue();
+              controller.newValue = controller.generateValue();
             },
             onHorizontalDragUpdate: (details) {
               if (details.globalPosition.dx < 65 * 1) {
@@ -28,31 +25,44 @@ class HomePage extends GetView<HomeController> {
                 controller.selectedRow.value = 3;
               } else if (details.globalPosition.dx < 65 * 5) {
                 controller.selectedRow.value = 4;
-              } else if (details.globalPosition.dx < 65 * 6) {
-                controller.selectedRow.value = 5;
               }
+              // else if (details.globalPosition.dx < 65 * 6) {
+              //   controller.selectedRow.value = 5;
+              // }
+              print(controller.selectedRow.value);
             },
             onHorizontalDragEnd: (details) {
-
               controller.list[controller.selectedRow.value!]
-                  .add(TileModel(name: controller.newValue));
+                  ?.add(RxInt(controller.newValue));
               controller.checkCombinations();
               controller.selectedRow.value = null;
             },
             child: Container(
               padding: const EdgeInsets.all(10),
-              color: Colors.white,
+              color: Colors.grey,
               child: Padding(
                 padding: const EdgeInsets.only(top: 100),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      ...List.generate(
-                          5,
-                          (index) => columnBuilder(
-                              list: controller.list[index],
-                              index: index)).toList()
-                    ]),
+                child: Obx(() {
+                  return Stack(children: [
+                    ...columnBuilder(
+                      list: controller.list,
+                    ),
+                    if (controller.selectedRow.value != null)
+                      Positioned(
+                        left: controller.selectedRow.value! * 70,
+                        top: controller
+                                .list[controller.selectedRow.value!]!.isNotEmpty
+                            ? controller.list[controller.selectedRow.value!]!
+                                    .length *
+                                70
+                            : 0,
+                        child: card(
+                          name: controller.newValue,
+                          lowOpacity: true,
+                        ),
+                      ),
+                  ]);
+                }),
               ),
             ),
           ),
@@ -64,24 +74,22 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget columnBuilder({required List<TileModel> list, required int index}) {
-    return SizedBox(child: Obx(() {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          ...list.map((name) => card(name: name.name)),
-          if (index == controller.selectedRow.value)
-            card(
-              name: controller.newValue,
-              lowOpacity: true,
-            ),
-        ],
-      );
-    }));
+  List<Widget> columnBuilder({required Map<int, List<RxInt>> list}) {
+    List<Widget> cardWidgets = [];
+
+    list.forEach((parentIndex, value) {
+      List.generate(list[parentIndex]!.length, (childIndex) {
+        cardWidgets.add(Positioned(
+            left: parentIndex * 70,
+            top: childIndex * 70,
+            child:
+                Obx(() => card(name: list[parentIndex]![childIndex].value))));
+      });
+    });
+    return cardWidgets;
   }
 
-  Widget card({required int name, bool lowOpacity = false}) =>
-      Container(
+  Widget card({required int name, bool lowOpacity = false}) => Container(
         decoration: BoxDecoration(
             color: lowOpacity
                 ? generateColor(name).withOpacity(0.5)
@@ -100,26 +108,21 @@ class HomePage extends GetView<HomeController> {
         ),
       );
 
-
-
-
- Color generateColor(int value){
-   switch (value) {
-     case 2:
-       return Colors.blue;
-     case 4:
-       return Colors.orange;
-     case 8:
-       return Colors.pink;
-     case 16:
-       return Colors.yellow;
-     case 32:
-       return Colors.lightGreen;
-     case 64:
-       return Colors.purple;
-   }
-   return Colors.black;
+  Color generateColor(int value) {
+    switch (value) {
+      case 2:
+        return Colors.blue;
+      case 4:
+        return Colors.orange;
+      case 8:
+        return Colors.pink;
+      case 16:
+        return Colors.yellow;
+      case 32:
+        return Colors.lightGreen;
+      case 64:
+        return Colors.purple;
+    }
+    return Colors.black;
   }
-
-
 }
